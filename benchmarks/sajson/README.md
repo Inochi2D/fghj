@@ -1,9 +1,9 @@
-## ASDF vs [sajson](https://github.com/chadaustin/sajson) Benchmark
+## FGHJ vs [sajson](https://github.com/chadaustin/sajson) Benchmark
 
 ### Platform
 Intel Haswell (AVX2),
 
-### ASDF
+### FGHJ
 ```
 dub build --build=release-nobounds --compiler=ldmd2
 ```
@@ -16,7 +16,7 @@ clang++ -O3 -march=native -std=c++14 benchmark/benchmark.cpp -Iinclude
 
 ### Results
 
-| Test | sajson, avg μs | asdf, avg μs | Speedup |
+| Test | sajson, avg μs | fghj, avg μs | Speedup |
 |---|---|---|---|
 | apache_builds | 142 | 93 | 53 % |
 | github_events | 78 | 44 | 77 % |

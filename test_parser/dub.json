@@ -1,13 +1,13 @@
 {
-	"name": "test_json-asdf",
+	"name": "test_json-fghj",
 	"authors": [
 		"Iaroshenko Ilia"
 	],
 	"dependencies": {
-		"asdf": {"path": "../"}
+		"fghj": {"path": "../"}
 	},
 	"dflags-ldc": ["-mattr=+sse4.2"],
-	"description": "ASDF Parser tests",
+	"description": "FGHJ Parser tests",
 	"copyright": "Copyright © 2017, Tamedia Digital",
 	"license": "BSL-1.0"
 }

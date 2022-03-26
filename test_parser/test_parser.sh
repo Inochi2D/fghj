@@ -4,6 +4,6 @@ if [ -d JSONTestSuite ]; then
 else
 	git clone https://github.com/nst/JSONTestSuite
 fi
-cp run_asdf_tests.py JSONTestSuite/run_asdf_tests.py
+cp run_fghj_tests.py JSONTestSuite/run_fghj_tests.py
 cd JSONTestSuite
-python3 run_asdf_tests.py
+python3 run_fghj_tests.py

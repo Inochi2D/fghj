@@ -1,6 +1,6 @@
-module asdf.outputarray;
+module fghj.outputarray;
 
-import asdf.asdf;
+import fghj.fghj;
 
 version(X86_64)
     version = X86_Any;
@@ -19,7 +19,7 @@ pure:
 
     auto result()
     {
-        return Asdf(data[0 .. shift]);
+        return Fghj(data[0 .. shift]);
     }
 
     this(size_t initialLength)

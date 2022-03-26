@@ -1,20 +1,20 @@
-project('asdf', 'd', version : '0.5.5', license: 'BSL-1.0')
+project('fghj', 'd', version : '0.5.5', license: 'BSL-1.0')
 
-description = 'Mir ASDF - JSON Parsing and Serialization'
+description = 'Mir FGHJ - JSON Parsing and Serialization'
 
 subprojects = ['mir-core', 'mir-algorithm']
 
 has_cpp_headers = false
 
 sources_list = [
-    'asdf/asdf',
-    'asdf/jsonbuffer',
-    'asdf/jsonparser',
-    'asdf/outputarray',
-    'asdf/package',
-    'asdf/serialization',
-    'asdf/transform',
-    'asdf/utility',
+    'fghj/fghj',
+    'fghj/jsonbuffer',
+    'fghj/jsonparser',
+    'fghj/outputarray',
+    'fghj/package',
+    'fghj/serialization',
+    'fghj/transform',
+    'fghj/utility',
 ]
 
 sources = []
@@ -74,8 +74,8 @@ install_subdir('source/',
 #     subdirs: 'd/' + meson.project_name(),
 # )
 
-asdf_dep = this_dep
-asdf_lib = this_lib
+fghj_dep = this_dep
+fghj_lib = this_lib
 
 test_subdirs = []
 

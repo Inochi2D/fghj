@@ -1,5 +1,5 @@
 /++
-$(H3 ASDF and JSON Serialization)
+$(H3 FGHJ and JSON Serialization)
 
 For aggregate types the order of the (de)serialization is the folowing:
     1. All public fields of `alias ? this` that are not hidden by members of `this` (recursively).
@@ -9,9 +9,9 @@ For aggregate types the order of the (de)serialization is the folowing:
 
 Publicly imports `mir.serde` from the `mir-algorithm` package.
 +/
-module asdf.serialization;
+module fghj.serialization;
 
-import asdf.jsonparser: assumePure;
+import fghj.jsonparser: assumePure;
 import mir.algebraic: isVariant;
 import mir.reflection;
 import std.range.primitives: isOutputRange;
@@ -21,7 +21,7 @@ public import mir.serde;
 pure
 unittest
 {
-    import asdf;
+    import fghj;
     import std.bigint;
     import std.datetime;
     import mir.conv;
@@ -78,14 +78,14 @@ unittest
         [E.a : "A"],
         "escaped chars = '\\', '\"', '\t', '\r', '\n'");
     assert(serializeToJson(cast(const)value) == json, serializeToJson(cast(const)value)); // check serialization of const data
-    assert(serializeToAsdf(value).to!string == json, serializeToAsdf(value).to!string);
+    assert(serializeToFghj(value).to!string == json, serializeToFghj(value).to!string);
     assert(deserialize!S(json).serializeToJson == json);
 }
 
 /// `finalizeSerialization` method
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct S
     {
@@ -104,7 +104,7 @@ unittest
 /// `finalizeDeserialization` method
 pure unittest
 {
-    import asdf;
+    import fghj;
 
     static struct S
     {
@@ -114,7 +114,7 @@ pure unittest
         @serdeIgnoreIn
         double sum;
 
-        void finalizeDeserialization(Asdf data) pure
+        void finalizeDeserialization(Fghj data) pure
         {
             auto r = data["c", "d"];
             auto a = r["e"].get(0.0);
@@ -133,7 +133,7 @@ pure unittest
 /// A user may define setter and/or getter properties.
 unittest
 {
-    import asdf;
+    import fghj;
     import mir.conv: to;
 
     static struct S
@@ -160,7 +160,7 @@ unittest
 /// makes nullable type to null value)
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct MyNullable
     {
@@ -249,7 +249,7 @@ unittest
     {
         long i;
 
-        SerdeException deserializeFromAsdf(Asdf data)
+        SerdeException deserializeFromFghj(Fghj data)
         {
             if (auto exc = deserializeValue(data, i))
                 return exc;
@@ -270,10 +270,10 @@ unittest
 
 // unittest
 // {
-//     Asdf[string] map;
+//     Fghj[string] map;
 
-//     map["num"] = serializeToAsdf(124);
-//     map["str"] = serializeToAsdf("value");
+//     map["num"] = serializeToFghj(124);
+//     map["str"] = serializeToFghj("value");
     
 //     import std.stdio;
 //     map.serializeToJson.writeln();
@@ -283,7 +283,7 @@ unittest
 unittest
 {
     import mir.conv: to;
-    import asdf;
+    import fghj;
 
     static struct Foo
     {
@@ -302,22 +302,22 @@ unittest
 
     // test for Not a Number
     assert (serializeToJson(Foo()).to!string == `{"f":"nan"}`);
-    assert (serializeToAsdf(Foo()).to!string == `{"f":"nan"}`);
+    assert (serializeToFghj(Foo()).to!string == `{"f":"nan"}`);
 
     assert (deserialize!Foo(`{"f":null}`)  == Foo());
     assert (deserialize!Foo(`{"f":"nan"}`) == Foo());
 
     assert (serializeToJson(Foo(1f/0f)).to!string == `{"f":"inf"}`);
-    assert (serializeToAsdf(Foo(1f/0f)).to!string == `{"f":"inf"}`);
+    assert (serializeToFghj(Foo(1f/0f)).to!string == `{"f":"inf"}`);
     assert (deserialize!Foo(`{"f":"inf"}`)  == Foo( float.infinity));
     assert (deserialize!Foo(`{"f":"-inf"}`) == Foo(-float.infinity));
 
     assert (serializeToJson(Foo(-1f/0f)).to!string == `{"f":"-inf"}`);
-    assert (serializeToAsdf(Foo(-1f/0f)).to!string == `{"f":"-inf"}`);
+    assert (serializeToFghj(Foo(-1f/0f)).to!string == `{"f":"-inf"}`);
     assert (deserialize!Foo(`{"f":"-inf"}`) == Foo(-float.infinity));
 }
 
-import asdf.asdf;
+import fghj.fghj;
 import mir.conv;
 import std.bigint: BigInt;
 import std.format: FormatSpec, formatValue;
@@ -330,20 +330,20 @@ import std.utf;
 deprecated("use mir.serde: SerdeException instead")
 alias DeserializationException = SerdeException;
 
-private SerdeException unexpectedKind(string msg = "Unexpected ASDF kind")(ubyte kind)
+private SerdeException unexpectedKind(string msg = "Unexpected FGHJ kind")(ubyte kind)
     @safe pure nothrow @nogc
 {
     import mir.conv: to;
-    static immutable exc(Asdf.Kind kind) = new SerdeException(msg ~ " " ~ kind.to!string);
+    static immutable exc(Fghj.Kind kind) = new SerdeException(msg ~ " " ~ kind.to!string);
 
     switch (kind)
     {
-        foreach (member; EnumMembers!(Asdf.Kind))
+        foreach (member; EnumMembers!(Fghj.Kind))
         {case member:
             return exc!member;
         }
         default:
-            static immutable ret = new SerdeException("Wrong encoding of ASDF kind");
+            static immutable ret = new SerdeException("Wrong encoding of FGHJ kind");
             return ret;
     }
 }
@@ -357,7 +357,7 @@ string serializeToJson(V)(auto ref V value)
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     struct S
     {
@@ -383,7 +383,7 @@ string serializeToJsonPretty(string sep = "\t", V)(auto ref V value)
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct S { int a; }
     assert(S(4).serializeToJsonPretty == "{\n\t\"a\": 4\n}");
@@ -400,10 +400,10 @@ void serializeToJsonPretty(string sep = "\t", V, O)(auto ref V value, ref O outp
 }
 
 
-/// ASDF serialization function
-Asdf serializeToAsdf(V)(auto ref V value, size_t initialLength = 32)
+/// FGHJ serialization function
+Fghj serializeToFghj(V)(auto ref V value, size_t initialLength = 32)
 {
-    auto ser = asdfSerializer(initialLength);
+    auto ser = fghjSerializer(initialLength);
     ser.serializeValue(value);
     ser.flush;
     return ser.app.result;
@@ -412,7 +412,7 @@ Asdf serializeToAsdf(V)(auto ref V value, size_t initialLength = 32)
 ///
 unittest
 {
-    import asdf;
+    import fghj;
     import mir.conv: to;
 
     struct S
@@ -421,11 +421,11 @@ unittest
         uint bar;
     }
 
-    assert(serializeToAsdf(S("str", 4)).to!string == `{"foo":"str","bar":4}`);
+    assert(serializeToFghj(S("str", 4)).to!string == `{"foo":"str","bar":4}`);
 }
 
 /// Deserialization function
-V deserialize(V)(Asdf data)
+V deserialize(V)(Fghj data)
 {
     V value;
     static if (is(V == class)) value = new V;
@@ -437,7 +437,7 @@ V deserialize(V)(Asdf data)
 /// ditto
 V deserialize(V)(in char[] str)
 {
-    import asdf.jsonparser: parseJson;
+    import fghj.jsonparser: parseJson;
     import std.range: only;
     return str.parseJson.deserialize!V;
 }
@@ -459,7 +459,7 @@ unittest
 {
     struct S
     {
-        // const(char)[] doesn't reallocate ASDF data.
+        // const(char)[] doesn't reallocate FGHJ data.
         @serdeProxy!(const(char)[])
         uint bar;
     }
@@ -478,7 +478,7 @@ version(unittest) private
         bar,
     }
 
-    // const(char)[] doesn't reallocate ASDF data.
+    // const(char)[] doesn't reallocate FGHJ data.
     @serdeProxy!(const(char)[])
     struct ProxyE
     {
@@ -567,7 +567,7 @@ pure unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct S
     {
@@ -580,7 +580,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct S
     {
@@ -594,7 +594,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct Decor
     {
@@ -652,7 +652,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct S
     {
@@ -678,7 +678,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct S
     {
@@ -693,7 +693,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     import std.uuid;
 
@@ -710,7 +710,7 @@ unittest
 /// Proxy type for array of algebraics
 unittest
 {
-    import asdf;
+    import fghj;
     import mir.algebraic: Variant;
 
     static struct ObjectA
@@ -751,14 +751,14 @@ unittest
             serializer.listEnd(state);
         }
 
-        auto deserializeFromAsdf(Asdf asdfData)
+        auto deserializeFromFghj(Fghj fghjData)
         {
-            import asdf : deserializeValue;
+            import fghj : deserializeValue;
             import std.traits : EnumMembers;
 
-            foreach (e; asdfData.byElement)
+            foreach (e; fghjData.byElement)
             {
-                if (e["name"] != Asdf.init)
+                if (e["name"] != Fghj.init)
                 {
                     array ~= MyObject(deserialize!ObjectA(e));
                 }
@@ -786,7 +786,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     import std.range;
     import std.uuid;
@@ -813,7 +813,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     static struct M
     {
@@ -849,7 +849,7 @@ unittest
 ///
 unittest
 {
-    import asdf;
+    import fghj;
     import std.range;
     import std.algorithm;
     import std.conv;
@@ -869,7 +869,7 @@ unittest
 /// JSON serialization back-end
 struct JsonSerializer(string sep, Dg)
 {
-    import asdf.jsonbuffer;
+    import fghj.jsonbuffer;
 
     static if(sep.length)
     {
@@ -1123,7 +1123,7 @@ auto jsonSerializer(string sep = "", Dg)(scope Dg sink)
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     import std.array;
     import std.bigint;
@@ -1195,14 +1195,14 @@ unittest
 }`);
 }
 
-/// ASDF serialization back-end
-struct AsdfSerializer
+/// FGHJ serialization back-end
+struct FghjSerializer
 {
     /// Output buffer
     OutputArray app;
 
-    import asdf.outputarray;
-    import asdf.asdf;
+    import fghj.outputarray;
+    import fghj.fghj;
     private uint state;
 
 pure:
@@ -1210,7 +1210,7 @@ pure:
     /// Serialization primitives
     size_t structBegin(size_t length = 0)
     {
-        app.put1(Asdf.Kind.object);
+        app.put1(Fghj.Kind.object);
         return app.skip(4);
     }
 
@@ -1223,7 +1223,7 @@ pure:
     ///ditto
     size_t listBegin(size_t length = 0)
     {
-        app.put1(Asdf.Kind.array);
+        app.put1(Fghj.Kind.array);
         return app.skip(4);
     }
 
@@ -1247,7 +1247,7 @@ pure:
     ///ditto
     void putNumberValue(Num)(Num num, FormatSpec!char fmt = FormatSpec!char.init) pure
     {
-        app.put1(Asdf.Kind.number);
+        app.put1(Fghj.Kind.number);
         auto sh = app.skip(1);
         static if (isNumeric!Num)
         {
@@ -1266,13 +1266,13 @@ pure:
     ///ditto
     void putValue(typeof(null))
     {
-        with(Asdf.Kind) app.put1(null_);
+        with(Fghj.Kind) app.put1(null_);
     }
 
     ///ditto
     void putValue(bool b)
     {
-        with(Asdf.Kind) app.put1(b ? true_ : false_);
+        with(Fghj.Kind) app.put1(b ? true_ : false_);
     }
 
     ///ditto
@@ -1286,7 +1286,7 @@ pure:
     ///ditto
     void putValue(in char[] str)
     {
-        app.put1(Asdf.Kind.string);
+        app.put1(Fghj.Kind.string);
         auto sh = app.skip(4);
         app.put(str);
         app.put4(cast(uint)(app.shift - sh - 4), sh);
@@ -1339,22 +1339,22 @@ pure:
     deprecated("Use listEnd instead") alias arrayEnd = listEnd;
 }
 
-/// Create ASDF serialization back-end
-auto asdfSerializer(size_t initialLength = 32)
+/// Create FGHJ serialization back-end
+auto fghjSerializer(size_t initialLength = 32)
 {
-    import asdf.outputarray;
-    return AsdfSerializer(OutputArray(initialLength));
+    import fghj.outputarray;
+    return FghjSerializer(OutputArray(initialLength));
 }
 
 ///
 unittest
 {
-    import asdf;
+    import fghj;
     import mir.conv: to;
     import std.bigint;
     import std.format: singleSpec;
 
-    auto ser = asdfSerializer();
+    auto ser = fghjSerializer();
     auto state0 = ser.structBegin;
 
         ser.putEscapedKey("null");
@@ -1385,7 +1385,7 @@ void serializeValue(S)(ref S serializer, typeof(null))
 ///
 unittest
 {
-    import asdf;
+    import fghj;
 
     assert(serializeToJson(null) == `null`);
 }
@@ -1887,7 +1887,7 @@ unittest
     }
     enum json = `{"foo":"bar"}`;
     assert(serializeToJson(S()) == json);
-    assert(serializeToAsdf(S()).to!string == json);
+    assert(serializeToFghj(S()).to!string == json);
 }
 
 /// $(GMREF mir-core, mir, algebraic) support.
@@ -1904,7 +1904,7 @@ unittest
 /// $(GMREF mir-core, mir, algebraic) with manual serialization.
 unittest
 {
-    import asdf.asdf;
+    import fghj.fghj;
 
     static struct Response
     {
@@ -1928,7 +1928,7 @@ unittest
 
         void serialize(S)(ref S serializer) const
         {
-            import asdf: serializeValue;
+            import fghj: serializeValue;
             import mir.algebraic: visit;
 
             auto o = serializer.structBegin();
@@ -1943,13 +1943,13 @@ unittest
             serializer.structEnd(o);
         }
 
-        SerdeException deserializeFromAsdf(Asdf asdfData)
+        SerdeException deserializeFromFghj(Fghj fghjData)
         {
-            import asdf : deserializeValue;
+            import fghj : deserializeValue;
             import std.traits : EnumMembers;
 
             Tag tag;
-            if (auto e = asdfData["tag"].deserializeValue(tag))
+            if (auto e = fghjData["tag"].deserializeValue(tag))
                 return e;
             final switch (tag)
             {
@@ -1958,7 +1958,7 @@ unittest
                     case m: {
                         alias T = Union.AllowedTypes[m];
                         data = T.init;
-                        if (auto e = asdfData["data"].deserializeValue(data.trustedGet!T))
+                        if (auto e = fghjData["data"].deserializeValue(data.trustedGet!T))
                             return e;
                         break;
                     }
@@ -1973,7 +1973,7 @@ unittest
     v = "str";
     assert(v == "str");
 
-    import asdf;
+    import fghj;
     assert(v.serializeToJson == `{"tag":"string","data":"str"}`);
     v = Response.init;
     v = `{"tag":"array","data":[{"tag":"string","data":"S"}]}`.deserialize!Response;
@@ -1982,10 +1982,10 @@ unittest
 }
 
 /// Deserialize `null` value
-SerdeException deserializeValue(T : typeof(null))(Asdf data, T)
+SerdeException deserializeValue(T : typeof(null))(Fghj data, T)
 {
     auto kind = data.kind;
-    if(kind != Asdf.Kind.null_)
+    if(kind != Fghj.Kind.null_)
         return unexpectedKind(kind);
     return null;
 }
@@ -1993,14 +1993,14 @@ SerdeException deserializeValue(T : typeof(null))(Asdf data, T)
 ///
 unittest
 {
-    assert(deserializeValue(serializeToAsdf(null), null) is null);
+    assert(deserializeValue(serializeToFghj(null), null) is null);
 }
 
 /// Deserialize boolean value
-SerdeException deserializeValue(T : bool)(Asdf data, ref T value) pure @safe
+SerdeException deserializeValue(T : bool)(Fghj data, ref T value) pure @safe
 {
     auto kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         case false_:
             value = false;
@@ -2016,7 +2016,7 @@ SerdeException deserializeValue(T : bool)(Asdf data, ref T value) pure @safe
 ///
 pure unittest
 {
-    assert(deserialize!bool(serializeToAsdf(true)));
+    assert(deserialize!bool(serializeToFghj(true)));
     assert(deserialize!bool(serializeToJson(true)));
 }
 
@@ -2047,19 +2047,19 @@ $(TABLE
 )
 
 +/
-SerdeException deserializeValue(V)(Asdf data, ref V value)
+SerdeException deserializeValue(V)(Fghj data, ref V value)
     if((isNumeric!V && !is(V == enum)))
 {
     auto kind = data.kind;
 
     static if (isFloatingPoint!V)
     {
-        if (kind == Asdf.Kind.null_)
+        if (kind == Fghj.Kind.null_)
         {
             value = V.nan;
             return null;
         }
-        if (kind == Asdf.Kind.string)
+        if (kind == Fghj.Kind.string)
         {
             const(char)[] v;
             .deserializeScopedString(data, v);
@@ -2097,7 +2097,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
         }
     }
 
-    if(kind != Asdf.Kind.number)
+    if(kind != Fghj.Kind.number)
         return unexpectedKind(kind);
     value = (cast(string) data.data[2 .. $]).to!V;
     return null;
@@ -2108,16 +2108,16 @@ unittest
 {
     import std.bigint;
 
-    assert(deserialize!ulong (serializeToAsdf(20)) == ulong (20));
+    assert(deserialize!ulong (serializeToFghj(20)) == ulong (20));
     assert(deserialize!ulong (serializeToJson(20)) == ulong (20));
-    assert(deserialize!double(serializeToAsdf(20)) == double(20));
+    assert(deserialize!double(serializeToFghj(20)) == double(20));
     assert(deserialize!double(serializeToJson(20)) == double(20));
-    assert(deserialize!BigInt(serializeToAsdf(20)) == BigInt(20));
+    assert(deserialize!BigInt(serializeToFghj(20)) == BigInt(20));
     assert(deserialize!BigInt(serializeToJson(20)) == BigInt(20));
 
     assert(deserialize!float (serializeToJson ("2.40")) == float (2.40));
     assert(deserialize!double(serializeToJson ("2.40")) == double(2.40));
-    assert(deserialize!double(serializeToAsdf("-2.40")) == double(-2.40));
+    assert(deserialize!double(serializeToFghj("-2.40")) == double(-2.40));
 
     import std.math : isNaN, isInfinity;
     assert(deserialize!float (serializeToJson  ("+NaN")).isNaN);
@@ -2126,7 +2126,7 @@ unittest
 }
 
 /// Deserialize enum value
-SerdeException deserializeValue(V)(Asdf data, ref V value)
+SerdeException deserializeValue(V)(Fghj data, ref V value)
     if(is(V == enum))
 {
     static if (hasUDA!(V, serdeProxy))
@@ -2156,17 +2156,17 @@ unittest
 {
     @serdeIgnoreCase enum Key { foo }
     assert(deserialize!Key(`"FOO"`) == Key.foo);
-    assert(deserialize!Key(serializeToAsdf("foo")) == Key.foo);
+    assert(deserialize!Key(serializeToFghj("foo")) == Key.foo);
 }
 
 /++
 Deserializes scoped string value.
-This function does not allocate a new string and just make a raw cast of ASDF data.
+This function does not allocate a new string and just make a raw cast of FGHJ data.
 +/
-SerdeException deserializeScopedString(V : const(char)[])(Asdf data, ref V value)
+SerdeException deserializeScopedString(V : const(char)[])(Fghj data, ref V value)
 {
     auto kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         case string:
             value = cast(V) data.data[5 .. $];
@@ -2183,11 +2183,11 @@ SerdeException deserializeScopedString(V : const(char)[])(Asdf data, ref V value
 Deserializes string value.
 This function allocates new string.
 +/
-SerdeException deserializeValue(V)(Asdf data, ref V value)
+SerdeException deserializeValue(V)(Fghj data, ref V value)
     if(is(V : const(char)[]) && !isAggregateType!V && !is(V == enum) && !isStdNullable!V)
 {
     auto kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         case string:
             value = (() @trusted => cast(V) (data.data[5 .. $]).dup)();
@@ -2230,7 +2230,7 @@ unittest
 /// issue #115
 unittest
 {
-    import asdf;
+    import fghj;
     import std.typecons;
 
     struct Example
@@ -2247,13 +2247,13 @@ unittest
 unittest
 {
     assert(deserialize!string(serializeToJson(null)) is null);
-    assert(deserialize!string(serializeToAsdf(null)) is null);
+    assert(deserialize!string(serializeToFghj(null)) is null);
     assert(deserialize!string(serializeToJson("\tbar")) == "\tbar");
-    assert(deserialize!string(serializeToAsdf("\"bar")) == "\"bar");
+    assert(deserialize!string(serializeToFghj("\"bar")) == "\"bar");
 }
 
 /// Deserialize single char
-SerdeException deserializeValue(V)(Asdf data, ref V value)
+SerdeException deserializeValue(V)(Fghj data, ref V value)
     if (is(V == char) && !is(V == enum))
 {
     return deserializeValue(data, *(()@trusted=> cast(char[1]*)&value)());
@@ -2267,11 +2267,11 @@ unittest
 }
 
 /// Deserialize array
-SerdeException deserializeValue(V : T[], T)(Asdf data, ref V value)
+SerdeException deserializeValue(V : T[], T)(Fghj data, ref V value)
     if(!isSomeChar!T && !isStaticArray!V)
 {
     const kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         case array:
             import std.algorithm.searching: count;
@@ -2304,16 +2304,16 @@ SerdeException deserializeValue(V : T[], T)(Asdf data, ref V value)
 unittest
 {
     assert(deserialize!(int[])(serializeToJson(null)) is null);
-    assert(deserialize!(int[])(serializeToAsdf(null)) is null);
+    assert(deserialize!(int[])(serializeToFghj(null)) is null);
     assert(deserialize!(int[])(serializeToJson([1, 3, 4])) == [1, 3, 4]);
-    assert(deserialize!(int[])(serializeToAsdf([1, 3, 4])) == [1, 3, 4]);
+    assert(deserialize!(int[])(serializeToFghj([1, 3, 4])) == [1, 3, 4]);
 }
 
 /// Deserialize static array
-SerdeException deserializeValue(V : T[N], T, size_t N)(Asdf data, ref V value)
+SerdeException deserializeValue(V : T[N], T, size_t N)(Fghj data, ref V value)
 {
     auto kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         static if(is(Unqual!T == char))
         {
@@ -2352,17 +2352,17 @@ SerdeException deserializeValue(V : T[N], T, size_t N)(Asdf data, ref V value)
 unittest
 {
     assert(deserialize!(int[4])(serializeToJson(null)) == [0, 0, 0, 0]);
-    assert(deserialize!(int[4])(serializeToAsdf(null)) == [0, 0, 0, 0]);
+    assert(deserialize!(int[4])(serializeToFghj(null)) == [0, 0, 0, 0]);
     assert(deserialize!(int[4])(serializeToJson([1, 3, 4])) == [1, 3, 4, 0]);
-    assert(deserialize!(int[4])(serializeToAsdf([1, 3, 4])) == [1, 3, 4, 0]);
+    assert(deserialize!(int[4])(serializeToFghj([1, 3, 4])) == [1, 3, 4, 0]);
     assert(deserialize!(int[2])(serializeToJson([1, 3, 4])) == [1, 3]);
-    assert(deserialize!(int[2])(serializeToAsdf([1, 3, 4])) == [1, 3]);
+    assert(deserialize!(int[2])(serializeToFghj([1, 3, 4])) == [1, 3]);
 
-    assert(deserialize!(char[2])(serializeToAsdf(['a','b'])) == ['a','b']);
-    assert(deserialize!(char[2])(serializeToAsdf(['a','\0'])) == ['a','\0']);
-    assert(deserialize!(char[2])(serializeToAsdf(['a','\255'])) == ['a','\255']);
-    assert(deserialize!(char[2])(serializeToAsdf(['\255'])) == ['\255','\0']);
-    assert(deserialize!(char[2])(serializeToAsdf(['\255', '\255', '\255'])) == ['\255','\255']);
+    assert(deserialize!(char[2])(serializeToFghj(['a','b'])) == ['a','b']);
+    assert(deserialize!(char[2])(serializeToFghj(['a','\0'])) == ['a','\0']);
+    assert(deserialize!(char[2])(serializeToFghj(['a','\255'])) == ['a','\255']);
+    assert(deserialize!(char[2])(serializeToFghj(['\255'])) == ['\255','\0']);
+    assert(deserialize!(char[2])(serializeToFghj(['\255', '\255', '\255'])) == ['\255','\255']);
 }
 
 /// AA with value of aggregate type
@@ -2377,10 +2377,10 @@ unittest
 }
 
 /// Deserialize string-value associative array
-SerdeException deserializeValue(V : T[string], T)(Asdf data, ref V value)
+SerdeException deserializeValue(V : T[string], T)(Fghj data, ref V value)
 {
     auto kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         case object:
             foreach(elem; data.byKeyValue)
@@ -2403,24 +2403,24 @@ SerdeException deserializeValue(V : T[string], T)(Asdf data, ref V value)
 unittest
 {
     assert(deserialize!(int[string])(serializeToJson(null)) is null);
-    assert(deserialize!(int[string])(serializeToAsdf(null)) is null);
+    assert(deserialize!(int[string])(serializeToFghj(null)) is null);
     assert(deserialize!(int[string])(serializeToJson(["a" : 1, "b" : 2])) == ["a" : 1, "b" : 2]);
-    assert(deserialize!(int[string])(serializeToAsdf(["a" : 1, "b" : 2])) == ["a" : 1, "b" : 2]);
+    assert(deserialize!(int[string])(serializeToFghj(["a" : 1, "b" : 2])) == ["a" : 1, "b" : 2]);
 }
 
 unittest
 {
     int[string] r = ["a" : 1];
-    serializeToAsdf(null).deserializeValue(r);
+    serializeToFghj(null).deserializeValue(r);
     assert(r is null);
 }
 
 /// Deserialize enumeration-value associative array
-SerdeException deserializeValue(V : T[E], T, E)(Asdf data, ref V value)
+SerdeException deserializeValue(V : T[E], T, E)(Fghj data, ref V value)
     if(is(E == enum))
 {
     auto kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         case object:
             foreach(elem; data.byKeyValue)
@@ -2444,25 +2444,25 @@ unittest
 {
     enum E {a, b}
     assert(deserialize!(int[E])(serializeToJson(null)) is null);
-    assert(deserialize!(int[E])(serializeToAsdf(null)) is null);
+    assert(deserialize!(int[E])(serializeToFghj(null)) is null);
     assert(deserialize!(int[E])(serializeToJson([E.a : 1, E.b : 2])) == [E.a : 1, E.b : 2]);
-    assert(deserialize!(int[E])(serializeToAsdf([E.a : 1, E.b : 2])) == [E.a : 1, E.b : 2]);
+    assert(deserialize!(int[E])(serializeToFghj([E.a : 1, E.b : 2])) == [E.a : 1, E.b : 2]);
 }
 
 unittest
 {
     enum E {a, b}
     int[E] r = [E.a : 1];
-    serializeToAsdf(null).deserializeValue(r);
+    serializeToFghj(null).deserializeValue(r);
     assert(r is null);
 }
 
 /// Deserialize associative array with integral type key
-SerdeException deserializeValue(V : T[K], T, K)(Asdf data, ref V value)
+SerdeException deserializeValue(V : T[K], T, K)(Fghj data, ref V value)
     if((isIntegral!K) && !is(K == enum))
 {
     auto kind = data.kind;
-    with(Asdf.Kind) switch(kind)
+    with(Fghj.Kind) switch(kind)
     {
         case object:
             foreach(elem; data.byKeyValue)
@@ -2485,15 +2485,15 @@ SerdeException deserializeValue(V : T[K], T, K)(Asdf data, ref V value)
 unittest
 {
     assert(deserialize!(int[int])(serializeToJson(null)) is null);
-    assert(deserialize!(int[int])(serializeToAsdf(null)) is null);
+    assert(deserialize!(int[int])(serializeToFghj(null)) is null);
     assert(deserialize!(int[int])(serializeToJson([2 : 1, 40 : 2])) == [2 : 1, 40 : 2]);
-    assert(deserialize!(int[int])(serializeToAsdf([2 : 1, 40 : 2])) == [2 : 1, 40 : 2]);
+    assert(deserialize!(int[int])(serializeToFghj([2 : 1, 40 : 2])) == [2 : 1, 40 : 2]);
 }
 
 unittest
 {
     int[int] r = [3 : 1];
-    serializeToAsdf(null).deserializeValue(r);
+    serializeToFghj(null).deserializeValue(r);
     assert(r is null);
 }
 
@@ -2527,31 +2527,31 @@ struct Impl
 {
 @safe pure @nogc static:
 
-    enum customDeserializeValueMehtodName = "deserializeFromAsdf";
+    enum customDeserializeValueMehtodName = "deserializeFromFghj";
 
-    bool isAnyNull(Asdf data)
+    bool isAnyNull(Fghj data)
     {
-        return data.kind == Asdf.Kind.null_;
+        return data.kind == Fghj.Kind.null_;
     }
 
-    bool isObjectNull(Asdf data)
+    bool isObjectNull(Fghj data)
     {
-        return data.kind == Asdf.Kind.null_;
+        return data.kind == Fghj.Kind.null_;
     }
 
-    bool isObject(Asdf data)
+    bool isObject(Fghj data)
     {
-        return data.kind == Asdf.Kind.object;
+        return data.kind == Fghj.Kind.object;
     }
 
-    SerdeException unexpectedData(string msg)(Asdf data)
+    SerdeException unexpectedData(string msg)(Fghj data)
     {
         return unexpectedKind(data.kind);
     }
 }
 
 /// Deserialize aggregate value
-SerdeException deserializeValue(V)(Asdf data, ref V value)
+SerdeException deserializeValue(V)(Fghj data, ref V value)
     if(isAggregateType!V)
 {
     import mir.algebraic;
@@ -2569,7 +2569,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
     static if (is(V == StringMap!T, T))
     {
         auto kind = data.kind;
-        with(Asdf.Kind) switch(kind)
+        with(Fghj.Kind) switch(kind)
         {
             case object:
                 foreach(elem; data.byKeyValue)
@@ -2597,7 +2597,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
         import mir.algebraic: isNullable;
         static if (isNullable!V && TypeSet.length == 2)
         {
-            if (data.kind == Asdf.Kind.null_)
+            if (data.kind == Fghj.Kind.null_)
             {
                 value = null;
                 return null;
@@ -2614,7 +2614,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
         {
             static if (contains!(typeof(null)))
             {
-                case Asdf.Kind.null_:
+                case Fghj.Kind.null_:
                 {
                     value = null;
                     return null;
@@ -2623,12 +2623,12 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
 
             static if (contains!bool)
             {
-                case Asdf.Kind.true_:
+                case Fghj.Kind.true_:
                 {
                     value = true;
                     return null;
                 }
-                case Asdf.Kind.false_:
+                case Fghj.Kind.false_:
                 {
                     value = false;
                     return null;
@@ -2637,7 +2637,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
 
             static if (contains!string)
             {
-                case Asdf.Kind.string:
+                case Fghj.Kind.string:
                 {
                     string str;
                     if (auto exc = deserializeValue(data, str))
@@ -2649,7 +2649,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
 
             static if (contains!long || contains!double)
             {
-                case Asdf.Kind.number:
+                case Fghj.Kind.number:
                 {
                     import mir.bignum.decimal;
                     DecimalExponentKey key;
@@ -2676,7 +2676,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
                         allowExponent,
                         checkEmpty,
                     )(str, key))
-                        return new SerdeException("Asdf: can't parse number string: " ~ str);
+                        return new SerdeException("Fghj: can't parse number string: " ~ str);
 
                     if (key || !contains!long)
                     {
@@ -2687,7 +2687,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
                         }
                         else
                         {
-                            return new SerdeException("Asdf: can't parse integer string: " ~ str);
+                            return new SerdeException("Fghj: can't parse integer string: " ~ str);
                         }
                     }
                     static if (contains!long)
@@ -2695,7 +2695,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
                         auto bigintView = decimal.coefficient.view;
                         auto ret = cast(long) bigintView;
                         if (ret != bigintView) {
-                            return new SerdeException("Asdf: integer overflow");
+                            return new SerdeException("Fghj: integer overflow");
                         }
                         value = ret;
                     }
@@ -2705,7 +2705,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
 
             static if (anySatisfy!(templateAnd!(isArray, templateNot!isSomeString), Types))
             {
-                case Asdf.Kind.array:
+                case Fghj.Kind.array:
                 {
                     alias ArrayTypes = Filter!(templateAnd!(isArray, templateNot!isSomeString), Types);
                     static assert(ArrayTypes.length == 1, ArrayTypes.stringof);
@@ -2719,7 +2719,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
 
             static if (anySatisfy!(isStringMap, Types))
             {
-                case Asdf.Kind.object:
+                case Fghj.Kind.object:
                 {
                     alias MapTypes = Filter!(isStringMap, Types);
                     static assert(MapTypes.length == 1, MapTypes.stringof);
@@ -2733,7 +2733,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
             else
             static if (anySatisfy!(isAssociativeArray, Types))
             {
-                case Asdf.Kind.object:
+                case Fghj.Kind.object:
                 {
                     alias AATypes = Filter!(isAssociativeArray, Types);
                     static assert(AATypes.length == 1, AATypes.stringof);
@@ -2752,7 +2752,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
     else
     static if (is(V == BigInt))
     {
-        if (data.kind != Asdf.Kind.number)
+        if (data.kind != Fghj.Kind.number)
             return unexpectedKind(data.kind);
         value = BigInt((()@trusted => cast(string) data.data[2 .. $])());
         return null;
@@ -2760,7 +2760,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
     else
     static if (isStdNullable!V)
     {
-        if (data.kind == Asdf.Kind.null_)
+        if (data.kind == Fghj.Kind.null_)
         {
             value.nullify;
             return null;
@@ -2773,9 +2773,9 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
         return null;
     }
     else
-    static if (__traits(hasMember, value, "deserializeFromAsdf"))
+    static if (__traits(hasMember, value, "deserializeFromFghj"))
     {
-        return __traits(getMember, value, "deserializeFromAsdf")(data);
+        return __traits(getMember, value, "deserializeFromFghj")(data);
     }
     else
     static if (hasUDA!(V, serdeProxy))
@@ -2790,11 +2790,11 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
     }}
     else
     {
-        if (!(data.kind == Asdf.Kind.object))
+        if (!(data.kind == Fghj.Kind.object))
         {
             static if(__traits(compiles, value = null))
             {
-                if (data.kind == Asdf.Kind.null_)
+                if (data.kind == Fghj.Kind.null_)
                 {
                     value = null;
                     return null;
@@ -2833,7 +2833,7 @@ SerdeException deserializeValue(V)(Asdf data, ref V value)
 
             alias impl = deserializeValueMemberImpl!(deserializeValue, deserializeScopedString);
 
-            static immutable exc(string member) = new SerdeException("ASDF deserialisation: non-optional member '" ~ member ~ "' in " ~ V.stringof ~ " is missing.");
+            static immutable exc(string member) = new SerdeException("FGHJ deserialisation: non-optional member '" ~ member ~ "' in " ~ V.stringof ~ " is missing.");
 
             static if (hasUDA!(V, serdeRealOrderedIn))
             {
@@ -3125,7 +3125,7 @@ unittest
     struct B {
         A a;
         string serialize() const {
-            return asdf.serializeToJson(a);
+            return fghj.serializeToJson(a);
         }
     }
     assert(B(A("2323")).serialize == `{"str":"2323"}`);

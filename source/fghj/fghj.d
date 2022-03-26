@@ -1,5 +1,5 @@
 /++
-ASDF Representation
+FGHJ Representation
 
 Copyright: Tamedia Digital, 2016
 
@@ -8,20 +8,20 @@ Authors: Ilya Yaroshenko
 License: MIT
 
 Macros:
-SUBMODULE = $(LINK2 asdf_$1.html, asdf.$1)
-SUBREF = $(LINK2 asdf_$1.html#.$2, $(TT $2))$(NBSP)
+SUBMODULE = $(LINK2 fghj_$1.html, fghj.$1)
+SUBREF = $(LINK2 fghj_$1.html#.$2, $(TT $2))$(NBSP)
 T2=$(TR $(TDNW $(LREF $1)) $(TD $+))
 T4=$(TR $(TDNW $(LREF $1)) $(TD $2) $(TD $3) $(TD $4))
 +/
-module asdf.asdf;
+module fghj.fghj;
 
 import std.exception;
 import std.range.primitives;
 import std.typecons;
 import std.traits;
 
-import asdf.jsonbuffer;
-import asdf.jsonparser: assumePure;
+import fghj.jsonbuffer;
+import fghj.jsonparser: assumePure;
 
 version(X86_64)
     version = X86_Any;
@@ -35,7 +35,7 @@ version (D_Exceptions)
     /++
     Serde Exception
     +/
-    class AsdfSerdeException : SerdeException
+    class FghjSerdeException : SerdeException
     {
         /// zero based faulty location
         size_t location;
@@ -73,7 +73,7 @@ version (D_Exceptions)
             this(msg, file, line, next);
         }
 
-        override AsdfSerdeException toMutable() @trusted pure nothrow @nogc const
+        override FghjSerdeException toMutable() @trusted pure nothrow @nogc const
         {
             return cast() this;
         }
@@ -83,10 +83,10 @@ version (D_Exceptions)
 }
 
 deprecated("use mir.serde: SerdeException instead")
-alias AsdfException = SerdeException;
+alias FghjException = SerdeException;
 
 ///
-class InvalidAsdfException: SerdeException
+class InvalidFghjException: SerdeException
 {
     ///
     this(
@@ -96,7 +96,7 @@ class InvalidAsdfException: SerdeException
         Throwable next = null) pure nothrow @safe 
     {
         import mir.format: text;
-        super(text("ASDF values is invalid for kind = ", kind), file, line, next);
+        super(text("FGHJ values is invalid for kind = ", kind), file, line, next);
     }
 
     ///
@@ -111,22 +111,22 @@ class InvalidAsdfException: SerdeException
     }
 }
 
-private void enforceValidAsdf(
+private void enforceValidFghj(
         bool condition,
         uint kind,
         string file = __FILE__,
         size_t line = __LINE__) @safe pure
 {
     if(!condition)
-        throw new InvalidAsdfException(kind, file, line);
+        throw new InvalidFghjException(kind, file, line);
 }
 
 ///
-class EmptyAsdfException: SerdeException
+class EmptyFghjException: SerdeException
 {
     ///
     this(
-        string msg = "ASDF value is empty",
+        string msg = "FGHJ value is empty",
         string file = __FILE__,
         size_t line = __LINE__,
         Throwable next = null) pure nothrow @nogc @safe 
@@ -136,9 +136,9 @@ class EmptyAsdfException: SerdeException
 }
 
 /++
-The structure for ASDF manipulation.
+The structure for FGHJ manipulation.
 +/
-struct Asdf
+struct Fghj
 {
     ///
     enum Kind : ubyte
@@ -159,29 +159,29 @@ struct Asdf
         object = 0x0A,
     }
 
-    /// Returns ASDF Kind
+    /// Returns FGHJ Kind
     ubyte kind() const pure @safe @nogc
     {
         if (!data.length)
         {
-            static immutable exc = new EmptyAsdfException;
+            static immutable exc = new EmptyFghjException;
             throw exc;
         }
         return data[0];
     }
 
     /++
-    Plain ASDF data.
+    Plain FGHJ data.
     +/
     ubyte[] data;
 
-    /// Creates ASDF using already allocated data
+    /// Creates FGHJ using already allocated data
     this(ubyte[] data) pure @safe nothrow @nogc
     {
         this.data = data;
     }
 
-    /// Creates ASDF from a string
+    /// Creates FGHJ from a string
     this(in char[] str) pure @safe
     {
         data = new ubyte[str.length + 5];
@@ -193,16 +193,16 @@ struct Asdf
     ///
     unittest
     {
-        assert(Asdf("string") == "string");
-        assert(Asdf("string") != "String");
+        assert(Fghj("string") == "string");
+        assert(Fghj("string") != "String");
     }
 
     // \uXXXX character support
     unittest
     {
         import mir.conv: to;
-        import asdf.jsonparser;
-        assert(Asdf("begin\u000bend").to!string == `"begin\u000Bend"`);
+        import fghj.jsonparser;
+        assert(Fghj("begin\u000bend").to!string == `"begin\u000Bend"`);
         assert("begin\u000bend" == cast(string) `"begin\u000Bend"`.parseJson, to!string(cast(ubyte[]) cast(string)( `"begin\u000Bend"`.parseJson)));
     }
 
@@ -217,10 +217,10 @@ struct Asdf
     unittest
     {
         import mir.conv: to;
-        import asdf.jsonparser;
-        auto asdfData = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`.parseJson;
-        asdfData["inner", "d"].remove;
-        assert(asdfData.to!string == `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","e":{}}}`);
+        import fghj.jsonparser;
+        auto fghjData = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`.parseJson;
+        fghjData["inner", "d"].remove;
+        assert(fghjData.to!string == `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","e":{}}}`);
     }
 
     ///
@@ -240,39 +240,39 @@ struct Asdf
     {
         if (!data.length)
         {
-            static immutable exc = new EmptyAsdfException("Data buffer is empty");
+            static immutable exc = new EmptyFghjException("Data buffer is empty");
             throw exc;
         }
         auto t = data[0];
         switch(t)
         {
             case Kind.null_:
-                enforceValidAsdf(data.length == 1, t);
+                enforceValidFghj(data.length == 1, t);
                 sink.put!"null";
                 break;
             case Kind.true_:
-                enforceValidAsdf(data.length == 1, t);
+                enforceValidFghj(data.length == 1, t);
                 sink.put!"true";
                 break;
             case Kind.false_:
-                enforceValidAsdf(data.length == 1, t);
+                enforceValidFghj(data.length == 1, t);
                 sink.put!"false";
                 break;
             case Kind.number:
-                enforceValidAsdf(data.length > 1, t);
+                enforceValidFghj(data.length > 1, t);
                 size_t length = data[1];
-                enforceValidAsdf(data.length == length + 2, t);
+                enforceValidFghj(data.length == length + 2, t);
                 sink.putSmallEscaped(cast(const(char)[]) data[2 .. $]);
                 break;
             case Kind.string:
-                enforceValidAsdf(data.length >= 5, Kind.object);
-                enforceValidAsdf(data.length == length4 + 5, t);
+                enforceValidFghj(data.length >= 5, Kind.object);
+                enforceValidFghj(data.length == length4 + 5, t);
                 sink.put('"');
                 sink.put(cast(const(char)[]) data[5 .. $]);
                 sink.put('"');
                 break;
             case Kind.array:
-                auto elems = Asdf(cast(ubyte[])data).byElement;
+                auto elems = Fghj(cast(ubyte[])data).byElement;
                 if(elems.empty)
                 {
                     sink.put!"[]";
@@ -289,7 +289,7 @@ struct Asdf
                 sink.put(']');
                 break;
             case Kind.object:
-                auto pairs = Asdf(cast(ubyte[])data).byKeyValue;
+                auto pairs = Fghj(cast(ubyte[])data).byKeyValue;
                 if(pairs.empty)
                 {
                     sink.put!"{}";
@@ -310,7 +310,7 @@ struct Asdf
                 sink.put('}');
                 break;
             default:
-                enforceValidAsdf(0, t);
+                enforceValidFghj(0, t);
         }
     }
 
@@ -318,16 +318,16 @@ struct Asdf
     unittest
     {
         import mir.conv: to;
-        import asdf.jsonparser;
+        import fghj.jsonparser;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
-        const asdfData = text.parseJson;
-        assert(asdfData.to!string == text);
+        const fghjData = text.parseJson;
+        assert(fghjData.to!string == text);
     }
 
     /++
     `==` operator overloads for `null`
     +/
-    bool opEquals(in Asdf rhs) const @safe pure nothrow @nogc
+    bool opEquals(in Fghj rhs) const @safe pure nothrow @nogc
     {
         return data == rhs.data;
     }
@@ -335,9 +335,9 @@ struct Asdf
     ///
     unittest
     {
-        import asdf.jsonparser;
-        auto asdfData = `null`.parseJson;
-        assert(asdfData == asdfData);
+        import fghj.jsonparser;
+        auto fghjData = `null`.parseJson;
+        assert(fghjData == fghjData);
     }
 
     /++
@@ -351,9 +351,9 @@ struct Asdf
     ///
     unittest
     {
-        import asdf.jsonparser;
-        auto asdfData = `null`.parseJson;
-        assert(asdfData == null);
+        import fghj.jsonparser;
+        auto fghjData = `null`.parseJson;
+        assert(fghjData == null);
     }
 
     /++
@@ -367,10 +367,10 @@ struct Asdf
     ///
     unittest
     {
-        import asdf.jsonparser;
-        auto asdfData = `true`.parseJson;
-        assert(asdfData == true);
-        assert(asdfData != false);
+        import fghj.jsonparser;
+        auto fghjData = `true`.parseJson;
+        assert(fghjData == true);
+        assert(fghjData != false);
     }
 
     /++
@@ -384,10 +384,10 @@ struct Asdf
     ///
     unittest
     {
-        import asdf.jsonparser;
-        auto asdfData = `"str"`.parseJson;
-        assert(asdfData == "str");
-        assert(asdfData != "stR");
+        import fghj.jsonparser;
+        auto fghjData = `"str"`.parseJson;
+        assert(fghjData == "str");
+        assert(fghjData != "stR");
     }
 
     /++
@@ -399,7 +399,7 @@ struct Asdf
         static struct Range
         {
             private ubyte[] _data;
-            private Asdf _front;
+            private Fghj _front;
 
             auto save()() pure @property
             {
@@ -416,23 +416,23 @@ struct Asdf
                         case Kind.null_:
                         case Kind.true_:
                         case Kind.false_:
-                            _front = Asdf(_data[0 .. 1]);
+                            _front = Fghj(_data[0 .. 1]);
                             _data.popFront;
                             return;
                         case Kind.number:
-                            enforceValidAsdf(_data.length >= 2, t);
+                            enforceValidFghj(_data.length >= 2, t);
                             size_t len = _data[1] + 2;
-                            enforceValidAsdf(_data.length >= len, t);
-                            _front = Asdf(_data[0 .. len]);
+                            enforceValidFghj(_data.length >= len, t);
+                            _front = Fghj(_data[0 .. len]);
                             _data = _data[len .. $];
                             return;
                         case Kind.string:
                         case Kind.array:
                         case Kind.object:
-                            enforceValidAsdf(_data.length >= 5, t);
-                            size_t len = Asdf(_data).length4 + 5;
-                            enforceValidAsdf(_data.length >= len, t);
-                            _front = Asdf(_data[0 .. len]);
+                            enforceValidFghj(_data.length >= 5, t);
+                            size_t len = Fghj(_data).length4 + 5;
+                            enforceValidFghj(_data.length >= len, t);
+                            _front = Fghj(_data[0 .. len]);
                             _data = _data[len .. $];
                             return;
                         case 0x80 | Kind.null_:
@@ -441,21 +441,21 @@ struct Asdf
                             _data.popFront;
                             continue;
                         case 0x80 | Kind.number:
-                            enforceValidAsdf(_data.length >= 2, t);
+                            enforceValidFghj(_data.length >= 2, t);
                             _data.popFrontExactly(_data[1] + 2);
                             continue;
                         case 0x80 | Kind.string:
                         case 0x80 | Kind.array:
                         case 0x80 | Kind.object:
-                            enforceValidAsdf(_data.length >= 5, t);
-                            size_t len = Asdf(_data).length4 + 5;
+                            enforceValidFghj(_data.length >= 5, t);
+                            size_t len = Fghj(_data).length4 + 5;
                             _data.popFrontExactly(len);
                             continue;
                         default:
-                            enforceValidAsdf(0, t);
+                            enforceValidFghj(0, t);
                     }
                 }
-                _front = Asdf.init;
+                _front = Fghj.init;
             }
 
             auto front() pure @property
@@ -471,8 +471,8 @@ struct Asdf
         }
         if(data.empty || data[0] != Kind.array)
             return Range.init;
-        enforceValidAsdf(data.length >= 5, Kind.array);
-        enforceValidAsdf(length4 == data.length - 5, Kind.array);
+        enforceValidFghj(data.length >= 5, Kind.array);
+        enforceValidFghj(length4 == data.length - 5, Kind.array);
         auto ret = Range(data[5 .. $]);
         if(ret._data.length)
             ret.popFront;
@@ -482,14 +482,14 @@ struct Asdf
     /++
     Returns:
         Input range composed of key-value pairs of an object.
-        Elements are type of `Tuple!(const(char)[], "key", Asdf, "value")`.
+        Elements are type of `Tuple!(const(char)[], "key", Fghj, "value")`.
     +/
     auto byKeyValue() pure
     {
         static struct Range
         {
             private ubyte[] _data;
-            private Tuple!(const(char)[], "key", Asdf, "value") _front;
+            private Tuple!(const(char)[], "key", Fghj, "value") _front;
 
             auto save() pure @property
             {
@@ -500,10 +500,10 @@ struct Asdf
             {
                 while(!_data.empty)
                 {
-                    enforceValidAsdf(_data.length > 1, Kind.object);
+                    enforceValidFghj(_data.length > 1, Kind.object);
                     size_t l = cast(ubyte) _data[0];
                     _data.popFront;
-                    enforceValidAsdf(_data.length >= l, Kind.object);
+                    enforceValidFghj(_data.length >= l, Kind.object);
                     _front.key = cast(const(char)[])_data[0 .. l];
                     _data.popFrontExactly(l);
                     uint t = cast(ubyte) _data.front;
@@ -512,23 +512,23 @@ struct Asdf
                         case Kind.null_:
                         case Kind.true_:
                         case Kind.false_:
-                            _front.value = Asdf(_data[0 .. 1]);
+                            _front.value = Fghj(_data[0 .. 1]);
                             _data.popFront;
                             return;
                         case Kind.number:
-                            enforceValidAsdf(_data.length >= 2, t);
+                            enforceValidFghj(_data.length >= 2, t);
                             size_t len = _data[1] + 2;
-                            enforceValidAsdf(_data.length >= len, t);
-                            _front.value = Asdf(_data[0 .. len]);
+                            enforceValidFghj(_data.length >= len, t);
+                            _front.value = Fghj(_data[0 .. len]);
                             _data = _data[len .. $];
                             return;
                         case Kind.string:
                         case Kind.array:
                         case Kind.object:
-                            enforceValidAsdf(_data.length >= 5, t);
-                            size_t len = Asdf(_data).length4 + 5;
-                            enforceValidAsdf(_data.length >= len, t);
-                            _front.value = Asdf(_data[0 .. len]);
+                            enforceValidFghj(_data.length >= 5, t);
+                            size_t len = Fghj(_data).length4 + 5;
+                            enforceValidFghj(_data.length >= len, t);
+                            _front.value = Fghj(_data[0 .. len]);
                             _data = _data[len .. $];
                             return;
                         case 0x80 | Kind.null_:
@@ -537,18 +537,18 @@ struct Asdf
                             _data.popFront;
                             continue;
                         case 0x80 | Kind.number:
-                            enforceValidAsdf(_data.length >= 2, t);
+                            enforceValidFghj(_data.length >= 2, t);
                             _data.popFrontExactly(_data[1] + 2);
                             continue;
                         case 0x80 | Kind.string:
                         case 0x80 | Kind.array:
                         case 0x80 | Kind.object:
-                            enforceValidAsdf(_data.length >= 5, t);
-                            size_t len = Asdf(_data).length4 + 5;
+                            enforceValidFghj(_data.length >= 5, t);
+                            size_t len = Fghj(_data).length4 + 5;
                             _data.popFrontExactly(len);
                             continue;
                         default:
-                            enforceValidAsdf(0, t);
+                            enforceValidFghj(0, t);
                     }
                 }
                 _front = _front.init;
@@ -567,8 +567,8 @@ struct Asdf
         }
         if(data.empty || data[0] != Kind.object)
             return Range.init;
-        enforceValidAsdf(data.length >= 5, Kind.object);
-        enforceValidAsdf(length4 == data.length - 5, Kind.object);
+        enforceValidFghj(data.length >= 5, Kind.object);
+        enforceValidFghj(length4 == data.length - 5, Kind.object);
         auto ret = Range(data[5 .. $]);
         if(ret._data.length)
             ret.popFront;
@@ -606,52 +606,52 @@ struct Asdf
     }
 
     /++
-    Searches for a value recursively in an ASDF object.
+    Searches for a value recursively in an FGHJ object.
 
     Params:
         keys = list of keys keys
     Returns
-        ASDF value if it was found (first win) or ASDF with empty plain data.
+        FGHJ value if it was found (first win) or FGHJ with empty plain data.
     +/
-    Asdf opIndex(in char[][] keys...) pure
+    Fghj opIndex(in char[][] keys...) pure
     {
-        auto asdf = this;
-        if(asdf.data.empty)
-            return Asdf.init;
+        auto fghj = this;
+        if(fghj.data.empty)
+            return Fghj.init;
         L: foreach(key; keys)
         {
-            if(asdf.data[0] != Asdf.Kind.object)
-                return Asdf.init;
-            foreach(e; asdf.byKeyValue)
+            if(fghj.data[0] != Fghj.Kind.object)
+                return Fghj.init;
+            foreach(e; fghj.byKeyValue)
             {
                 if(e.key == key)
                 {
-                    asdf = e.value;
+                    fghj = e.value;
                     continue L;
                 }
             }
-            return Asdf.init;
+            return Fghj.init;
         }
-        return asdf;
+        return fghj;
     }
 
     ///
     unittest
     {
-        import asdf.jsonparser;
-        auto asdfData = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`.parseJson;
-        assert(asdfData["inner", "a"] == true);
-        assert(asdfData["inner", "b"] == false);
-        assert(asdfData["inner", "c"] == "32323");
-        assert(asdfData["inner", "d"] == null);
-        assert(asdfData["no", "such", "keys"] == Asdf.init);
+        import fghj.jsonparser;
+        auto fghjData = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`.parseJson;
+        assert(fghjData["inner", "a"] == true);
+        assert(fghjData["inner", "b"] == false);
+        assert(fghjData["inner", "c"] == "32323");
+        assert(fghjData["inner", "d"] == null);
+        assert(fghjData["no", "such", "keys"] == Fghj.init);
     }
 
     /++
     Params:
-        def = default value. It is used when ASDF value equals `Asdf.init`.
+        def = default value. It is used when FGHJ value equals `Fghj.init`.
     Returns:
-        `cast(T) this` if `this != Asdf.init` and `def` otherwise.
+        `cast(T) this` if `this != Fghj.init` and `def` otherwise.
     +/
     T get(T)(T def)
     {
@@ -665,12 +665,12 @@ struct Asdf
     ///
     unittest
     {
-        import asdf.jsonparser;
-        auto asdfData = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`.parseJson;
-        assert(asdfData["inner", "a"].get(false) == true);
-        assert(asdfData["inner", "b"].get(true) == false);
-        assert(asdfData["inner", "c"].get(100) == 32323);
-        assert(asdfData["no", "such", "keys"].get(100) == 100);
+        import fghj.jsonparser;
+        auto fghjData = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`.parseJson;
+        assert(fghjData["inner", "a"].get(false) == true);
+        assert(fghjData["inner", "b"].get(true) == false);
+        assert(fghjData["inner", "c"].get(100) == 32323);
+        assert(fghjData["no", "such", "keys"].get(100) == 100);
     }
 
     /++
@@ -684,7 +684,7 @@ struct Asdf
         import std.conv: ConvException;
         import std.format: format;
         import std.math: trunc;
-        import asdf.serialization;
+        import fghj.serialization;
         auto k = kind;
         with(Kind) switch(kind)
         {
@@ -752,8 +752,8 @@ struct Asdf
     unittest
     {
         import std.math;
-        import asdf.serialization;
-        auto null_ = serializeToAsdf(null);
+        import fghj.serialization;
+        auto null_ = serializeToFghj(null);
         interface I {}
         class C {}
         assert(cast(uint[]) null_ is null);
@@ -768,9 +768,9 @@ struct Asdf
     unittest
     {
         import std.math;
-        import asdf.serialization;
-        auto true_ = serializeToAsdf(true);
-        auto false_ = serializeToAsdf(false);
+        import fghj.serialization;
+        auto true_ = serializeToFghj(true);
+        auto false_ = serializeToFghj(false);
         static struct C {
             this(bool){}
         }
@@ -788,9 +788,9 @@ struct Asdf
     unittest
     {
         import std.bigint;
-        import asdf.serialization;
-        auto number = serializeToAsdf(1234);
-        auto zero = serializeToAsdf(0);
+        import fghj.serialization;
+        auto number = serializeToFghj(1234);
+        auto zero = serializeToFghj(0);
         static struct C
         {
             this(in char[] numberString)
@@ -813,11 +813,11 @@ struct Asdf
     unittest
     {
         import std.bigint;
-        import asdf.serialization;
-        auto number = serializeToAsdf("1234");
-        auto false_ = serializeToAsdf("false");
-        auto bar = serializeToAsdf("bar");
-        auto zero = serializeToAsdf("0");
+        import fghj.serialization;
+        auto number = serializeToFghj("1234");
+        auto false_ = serializeToFghj("false");
+        auto bar = serializeToFghj("bar");
+        auto zero = serializeToFghj("0");
         static struct C
         {
             this(in char[] str)
@@ -840,22 +840,22 @@ struct Asdf
     }
 
     /++
-    For ASDF arrays and objects `cast(T)` just returns `this.deserialize!T`.
+    For FGHJ arrays and objects `cast(T)` just returns `this.deserialize!T`.
     +/
     unittest
     {
         import std.bigint;
-        import asdf.serialization;
-        assert(cast(int[]) serializeToAsdf([100, 20]) == [100, 20]);
+        import fghj.serialization;
+        assert(cast(int[]) serializeToFghj([100, 20]) == [100, 20]);
     }
 
     /// UNIX Time
     unittest
     {
         import std.datetime;
-        import asdf.serialization;
+        import fghj.serialization;
 
-        auto num = serializeToAsdf(0.123456789); // rounding up to usecs
+        auto num = serializeToFghj(0.123456789); // rounding up to usecs
         assert(cast(DateTime) num == DateTime(1970, 1, 1));
         assert(cast(SysTime) num == SysTime(DateTime(1970, 1, 1), usecs(123456), UTC())); // UTC time zone is used.
     }

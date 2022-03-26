@@ -2,19 +2,19 @@
 import std.stdio;
 import std.exception;
 
-import asdf;
+import fghj;
 
 int main(string[] args)
 {
 	if(args.length < 2)
 	{
-		writeln("Usage: test_json-asdf <input_filname>.");
+		writeln("Usage: test_json-fghj <input_filname>.");
 		return -1;
 	}
 	auto filename = args[1];
 	try
 	{
-		auto asdf = File(filename)
+		auto fghj = File(filename)
 			.byChunk(4096)
 			.parseJson();
 	}

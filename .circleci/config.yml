@@ -12,7 +12,7 @@ workflows:
             tags:
               only: /^v(\d)+(\.(\d)+)+$/
       - mirci/upload_docs:
-          to: asdf.libmir.org
+          to: fghj.libmir.org
           requires:
             - mirci/test_and_build_docs
           filters:

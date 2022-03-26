@@ -1,5 +1,5 @@
 /++
-Mutable ASDF data structure.
+Mutable FGHJ data structure.
 The representation can be used to compute a difference between JSON object-trees.
 
 Copyright: Tamedia Digital, 2016
@@ -8,29 +8,29 @@ Authors: Ilya Yaroshenko
 
 License: BSL-1.0
 +/
-module asdf.transform;
+module fghj.transform;
 
-import asdf.asdf;
-import asdf.serialization;
+import fghj.fghj;
+import fghj.serialization;
 import std.exception: enforce;
 
 /++
-Object-tree structure for mutable Asdf representation.
+Object-tree structure for mutable Fghj representation.
 
-`AsdfNode` can be used to construct and manipulate JSON objects.
-Each `AsdfNode` can represent either a dynamic JSON object (associative array of `AsdfNode` nodes) or a ASDF JSON value.
+`FghjNode` can be used to construct and manipulate JSON objects.
+Each `FghjNode` can represent either a dynamic JSON object (associative array of `FghjNode` nodes) or a FGHJ JSON value.
 JSON arrays can be represented only as JSON values.
 +/
-struct AsdfNode
+struct FghjNode
 {
     /++
     Children nodes.
     +/
-    AsdfNode[const(char)[]] children;
+    FghjNode[const(char)[]] children;
     /++
     Leaf data.
     +/
-    Asdf data;
+    Fghj data;
 
 pure:
 
@@ -43,15 +43,15 @@ pure:
     }
 
     /++
-    Construct `AsdfNode` recursively.
+    Construct `FghjNode` recursively.
     +/
-    this(Asdf data)
+    this(Fghj data)
     {
-        if(data.kind == Asdf.Kind.object)
+        if(data.kind == Fghj.Kind.object)
         {
             foreach(kv; data.byKeyValue)
             {
-                children[kv.key] = AsdfNode(kv.value);
+                children[kv.key] = FghjNode(kv.value);
             }
         }
         else
@@ -62,7 +62,7 @@ pure:
     }
 
     ///
-    ref AsdfNode opIndex(scope const(char)[][] keys...) scope return
+    ref FghjNode opIndex(scope const(char)[][] keys...) scope return
     {
         if(keys.length == 0)
             return this;
@@ -70,7 +70,7 @@ pure:
         for(;;)
         {
             auto ptr = keys[0] in ret.children;
-            enforce(ptr, "AsdfNode.opIndex: keys do not exist");
+            enforce(ptr, "FghjNode.opIndex: keys do not exist");
             keys = keys[1 .. $];
             if(keys.length == 0)
                 return *ptr;
@@ -81,14 +81,14 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
-        auto root = AsdfNode(text.parseJson);
+        auto root = FghjNode(text.parseJson);
         assert(root["inner", "a"].data == `true`.parseJson);
     }
 
     ///
-    void opIndexAssign(AsdfNode value, scope const(char)[][] keys...)
+    void opIndexAssign(FghjNode value, scope const(char)[][] keys...)
     {
         auto root = &this;
         foreach(key; keys)
@@ -97,13 +97,13 @@ pure:
             auto ptr = key in root.children;
             if(ptr)
             {
-                enforce(ptr, "AsdfNode.opIndex: keys do not exist");
+                enforce(ptr, "FghjNode.opIndex: keys do not exist");
                 keys = keys[1 .. $];
                 root = ptr;
             }
             else
             {
-                root.children[keys[0]] = AsdfNode.init;
+                root.children[keys[0]] = FghjNode.init;
                 goto L;
             }
         }
@@ -113,10 +113,10 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
-        auto root = AsdfNode(text.parseJson);
-        auto value = AsdfNode(`true`.parseJson);
+        auto root = FghjNode(text.parseJson);
+        auto value = FghjNode(`true`.parseJson);
         root["inner", "g", "u"] = value;
         assert(root["inner", "g", "u"].data == true);
     }
@@ -127,7 +127,7 @@ pure:
         keys = list of keys
     Returns: `[keys]` if any and `value` othervise.
     +/
-    AsdfNode get(AsdfNode value, in char[][] keys...)
+    FghjNode get(FghjNode value, in char[][] keys...)
     {
         auto ret = this;
         foreach(key; keys)
@@ -144,16 +144,16 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
-        auto root = AsdfNode(text.parseJson);
-        auto value = AsdfNode(`false`.parseJson);
+        auto root = FghjNode(text.parseJson);
+        auto value = FghjNode(`false`.parseJson);
         assert(root.get(value, "inner", "a").data == true);
         assert(root.get(value, "inner", "f").data == false);
     }
 
     /// Serialization primitive
-    void serialize(ref AsdfSerializer serializer)
+    void serialize(ref FghjSerializer serializer)
     {
         if(isLeaf)
         {
@@ -170,24 +170,24 @@ pure:
     }
 
     ///
-    Asdf opCast(T : Asdf)()
+    Fghj opCast(T : Fghj)()
     {
-        return serializeToAsdf(this);
+        return serializeToFghj(this);
     }
 
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
-        auto root = AsdfNode(text.parseJson);
+        auto root = FghjNode(text.parseJson);
         import std.stdio;
-        Asdf flat = cast(Asdf) root;
+        Fghj flat = cast(Fghj) root;
         assert(flat["inner", "a"] == true);
     }
 
     ///
-    bool opEquals(in AsdfNode rhs) const @safe pure nothrow @nogc
+    bool opEquals(in FghjNode rhs) const @safe pure nothrow @nogc
     {
         if(isLeaf)
             if(rhs.isLeaf)
@@ -204,21 +204,21 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
-        auto root1 = AsdfNode(text.parseJson);
-        auto root2= AsdfNode(text.parseJson);
+        auto root1 = FghjNode(text.parseJson);
+        auto root2= FghjNode(text.parseJson);
         assert(root1 == root2);
         assert(root1["inner"].children.remove("b"));
         assert(root1 != root2);
     }
 
     /// Adds data to the object-tree recursively.
-    void add(Asdf data)
+    void add(Fghj data)
     {
-        if(data.kind == Asdf.Kind.object)
+        if(data.kind == Fghj.Kind.object)
         {
-            this.data = Asdf.init;
+            this.data = Fghj.init;
             foreach(kv; data.byKeyValue)
             {
                 if(auto nodePtr = kv.key in children)
@@ -227,7 +227,7 @@ pure:
                 }
                 else
                 {
-                    children[kv.key] = AsdfNode(kv.value);
+                    children[kv.key] = FghjNode(kv.value);
                 }
             }
         }
@@ -241,22 +241,22 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
         auto addition = `{"do":"re","inner":{"a":false,"u":2}}`;
-        auto root = AsdfNode(text.parseJson);
+        auto root = FghjNode(text.parseJson);
         root.add(addition.parseJson);
         auto result = `{"do":"re","foo":"bar","inner":{"a":false,"u":2,"b":false,"c":"32323","d":null,"e":{}}}`;
-        assert(root == AsdfNode(result.parseJson));
+        assert(root == FghjNode(result.parseJson));
     }
 
     /// Removes keys from the object-tree recursively.
-    void remove(Asdf data)
+    void remove(Fghj data)
     {
-        enforce(children, "AsdfNode.remove: asdf data must be a sub-tree");
+        enforce(children, "FghjNode.remove: fghj data must be a sub-tree");
         foreach(kv; data.byKeyValue)
         {
-            if(kv.value.kind == Asdf.Kind.object)
+            if(kv.value.kind == Fghj.Kind.object)
             {
                 if(auto nodePtr = kv.key in children)
                 {
@@ -273,16 +273,16 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text = `{"foo":"bar","inner":{"a":true,"b":false,"c":"32323","d":null,"e":{}}}`;
         auto rem = `{"do":null,"foo":null,"inner":{"c":null,"e":null}}`;
-        auto root = AsdfNode(text.parseJson);
+        auto root = FghjNode(text.parseJson);
         root.remove(rem.parseJson);
         auto result = `{"inner":{"a":true,"b":false,"d":null}}`;
-        assert(root == AsdfNode(result.parseJson));
+        assert(root == FghjNode(result.parseJson));
     }
 
-    private void removedImpl(ref AsdfSerializer serializer, AsdfNode node)
+    private void removedImpl(ref FghjSerializer serializer, FghjNode node)
     {
         import std.exception : enforce;
         enforce(!isLeaf);
@@ -306,11 +306,11 @@ pure:
     Returns the subset of the object-tree which is not represented in `node`.
     If a leaf is represented but has a different value then it will be included
     in the return value.
-    Returned value has ASDF format and its leaves are set to `null`.
+    Returned value has FGHJ format and its leaves are set to `null`.
     +/
-    Asdf removed(AsdfNode node)
+    Fghj removed(FghjNode node)
     {
-        auto serializer = asdfSerializer();
+        auto serializer = fghjSerializer();
         removedImpl(serializer, node);
         serializer.flush;
         return serializer.app.result;
@@ -319,16 +319,16 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text1 = `{"inner":{"a":true,"b":false,"d":null}}`;
         auto text2 = `{"foo":"bar","inner":{"a":false,"b":false,"c":"32323","d":null,"e":{}}}`;
-        auto node1 = AsdfNode(text1.parseJson);
-        auto node2 = AsdfNode(text2.parseJson);
-        auto diff = AsdfNode(node2.removed(node1));
-        assert(diff == AsdfNode(`{"foo":null,"inner":{"a":null,"c":null,"e":null}}`.parseJson));
+        auto node1 = FghjNode(text1.parseJson);
+        auto node2 = FghjNode(text2.parseJson);
+        auto diff = FghjNode(node2.removed(node1));
+        assert(diff == FghjNode(`{"foo":null,"inner":{"a":null,"c":null,"e":null}}`.parseJson));
     }
 
-    void addedImpl(ref AsdfSerializer serializer, AsdfNode node)
+    void addedImpl(ref FghjSerializer serializer, FghjNode node)
     {
         import std.exception : enforce;
         enforce(!isLeaf);
@@ -352,11 +352,11 @@ pure:
     Returns the subset of the node which is not represented in the object-tree.
     If a leaf is represented but has a different value then it will be included
     in the return value.
-    Returned value has ASDF format.
+    Returned value has FGHJ format.
     +/
-    Asdf added(AsdfNode node)
+    Fghj added(FghjNode node)
     {
-        auto serializer = asdfSerializer();
+        auto serializer = fghjSerializer();
         addedImpl(serializer, node);
         serializer.flush;
         return serializer.app.result;
@@ -365,12 +365,12 @@ pure:
     ///
     unittest
     {
-        import asdf;
+        import fghj;
         auto text1 = `{"foo":"bar","inner":{"a":false,"b":false,"c":"32323","d":null,"e":{}}}`;
         auto text2 = `{"inner":{"a":true,"b":false,"d":null}}`;
-        auto node1 = AsdfNode(text1.parseJson);
-        auto node2 = AsdfNode(text2.parseJson);
-        auto diff = AsdfNode(node2.added(node1));
-        assert(diff == AsdfNode(`{"foo":"bar","inner":{"a":false,"c":"32323","e":{}}}`.parseJson));
+        auto node1 = FghjNode(text1.parseJson);
+        auto node2 = FghjNode(text2.parseJson);
+        auto diff = FghjNode(node2.added(node1));
+        assert(diff == FghjNode(`{"foo":"bar","inner":{"a":false,"c":"32323","e":{}}}`.parseJson));
     }
 }

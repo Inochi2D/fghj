@@ -8,15 +8,15 @@ Authors: Ilya Yaroshenko
 License: MIT
 
 Macros:
-SUBMODULE = $(LINK2 asdf_$1.html, asdf.$1)
-SUBREF = $(LINK2 asdf_$1.html#.$2, $(TT $2))$(NBSP)
+SUBMODULE = $(LINK2 fghj_$1.html, fghj.$1)
+SUBREF = $(LINK2 fghj_$1.html#.$2, $(TT $2))$(NBSP)
 T2=$(TR $(TDNW $(LREF $1)) $(TD $+))
 T4=$(TR $(TDNW $(LREF $1)) $(TD $2) $(TD $3) $(TD $4))
 +/
-module asdf.jsonparser;
+module fghj.jsonparser;
 
-import asdf.asdf;
-import asdf.outputarray;
+import fghj.fghj;
+import fghj.outputarray;
 import std.experimental.allocator.gc_allocator;
 import std.meta;
 import std.range.primitives;
@@ -48,7 +48,7 @@ else
 version(X86)
     version = X86_Any;
 
-private alias ASDFGCAllocator = typeof(GCAllocator.instance);
+private alias FGHJGCAllocator = typeof(GCAllocator.instance);
 
 /++
 Parses json value
@@ -57,9 +57,9 @@ Params:
         `chunks` can use the same buffer for each chunk.
     initLength = initial output buffer length. Minimum value is 32.
 Returns:
-    ASDF value
+    FGHJ value
 +/
-Asdf parseJson(
+Fghj parseJson(
     Flag!"includingNewLine" includingNewLine = Yes.includingNewLine,
     Flag!"spaces" spaces = Yes.spaces,
     Chunks)
@@ -67,7 +67,7 @@ Asdf parseJson(
     if(is(ElementType!Chunks : const(ubyte)[]))
 {
     enum assumeValid = false;
-    auto parser = jsonParser!(includingNewLine, spaces, assumeValid)(ASDFGCAllocator.instance, chunks);
+    auto parser = jsonParser!(includingNewLine, spaces, assumeValid)(FGHJGCAllocator.instance, chunks);
     return parseJson(parser);
 }
 
@@ -87,9 +87,9 @@ Params:
     str = input string
     allocator = (optional) memory allocator
 Returns:
-    ASDF value
+    FGHJ value
 +/
-Asdf parseJson(
+Fghj parseJson(
     Flag!"includingNewLine" includingNewLine = Yes.includingNewLine,
     Flag!"spaces" spaces = Yes.spaces,
     Flag!"assumeValid" assumeValid = No.assumeValid,
@@ -115,12 +115,12 @@ Asdf parseJson(
 /// Faulty location
 pure unittest
 {
-    import asdf;
+    import fghj;
     try
     {
         auto data = `[1, 2, ]`.parseJson;
     }
-    catch(AsdfSerdeException e)
+    catch(FghjSerdeException e)
     {
         import std.conv;
         /// zero based index
@@ -131,14 +131,14 @@ pure unittest
 }
 
 /// ditto
-Asdf parseJson(
+Fghj parseJson(
     Flag!"includingNewLine" includingNewLine = Yes.includingNewLine,
     Flag!"spaces" spaces = Yes.spaces,
     Flag!"assumeValid" assumeValid = No.assumeValid,
     )
     (in char[] str)
 {
-    auto parser = jsonParser!(includingNewLine, spaces, assumeValid)(ASDFGCAllocator.instance, str);
+    auto parser = jsonParser!(includingNewLine, spaces, assumeValid)(FGHJGCAllocator.instance, str);
     return parseJson(parser);
 }
 
@@ -149,11 +149,11 @@ unittest
 }
 
 
-private Asdf parseJson(Parser)(ref Parser parser) {
+private Fghj parseJson(Parser)(ref Parser parser) {
     size_t location;
     if (parser.parse(location))
-        throw new AsdfSerdeException(parser.lastError, location);
-    return Asdf(parser.result);
+        throw new FghjSerdeException(parser.lastError, location);
+    return Fghj(parser.result);
 }
 
 
@@ -174,7 +174,7 @@ Params:
     input = input range composed of elements type of `const(ubyte)[]` or string / const(char)[].
         `chunks` can use the same buffer for each chunk.
 Returns:
-    Input range composed of ASDF values. Each value uses the same internal buffer.
+    Input range composed of FGHJ values. Each value uses the same internal buffer.
 +/
 auto parseJsonByLine(
     Flag!"spaces" spaces = Yes.spaces,
@@ -182,7 +182,7 @@ auto parseJsonByLine(
     Input)
     (Input input)
 {
-    alias Parser = JsonParser!(false, cast(bool)spaces, false, ASDFGCAllocator, Input);
+    alias Parser = JsonParser!(false, cast(bool)spaces, false, FGHJGCAllocator, Input);
     struct ByLineValue
     {
         Parser parser;
@@ -206,7 +206,7 @@ auto parseJsonByLine(
                     auto t = parser.skipSpaces_;
                     if(t != '\n' && t != 0)
                     {
-                        error = AsdfErrorCode.unexpectedValue;
+                        error = FghjErrorCode.unexpectedValue;
                         parser._lastError = "expected new line or end of input";
                     }
                     else
@@ -232,7 +232,7 @@ auto parseJsonByLine(
         auto front() @property
         {
             assert(!empty);
-            return Asdf(parser.result);
+            return Fghj(parser.result);
         }
 
         bool empty()
@@ -247,7 +247,7 @@ auto parseJsonByLine(
     }
     else
     {
-        ret = ByLineValue(Parser(ASDFGCAllocator.instance, input));
+        ret = ByLineValue(Parser(FGHJGCAllocator.instance, input));
         ret.popFront;
     }
     return ret;
@@ -265,7 +265,7 @@ else
     }
 }
 
-enum AsdfErrorCode
+enum FghjErrorCode
 {
     success,
     unexpectedEnd,
@@ -564,14 +564,14 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
     }
 
 
-    AsdfErrorCode parse()
+    FghjErrorCode parse()
     {
         size_t location;
         return parse(location);
     }
 
     pragma(inline, false)
-    AsdfErrorCode parse(out size_t location)
+    FghjErrorCode parse(out size_t location)
     {
         version(SSE42)
         {
@@ -774,7 +774,7 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
             stringValue:
             case '"':
                 currIsKey = false;
-                *dataPtr++ = Asdf.Kind.string;
+                *dataPtr++ = Fghj.Kind.string;
                 stringAndNumberShift = dataPtr;
                 // reserve 4 byte for the length
                 dataPtr += 4;
@@ -783,7 +783,7 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
             case '0':
             ..
             case '9': {
-                *dataPtr++ = Asdf.Kind.number;
+                *dataPtr++ = Fghj.Kind.number;
                 stringAndNumberShift = dataPtr;
                 // reserve 1 byte for the length
                 dataPtr++; // write the first character
@@ -841,7 +841,7 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
             }
             case '{':
                 strPtr++;
-                *dataPtr++ = Asdf.Kind.object;
+                *dataPtr++ = Fghj.Kind.object;
                 stack.push(((dataPtr - data.ptr) << 1) ^ 1);
                 dataPtr += 4;
                 if (!skipSpaces)
@@ -852,7 +852,7 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
                 goto structure_end;
             case '[':
                 strPtr++;
-                *dataPtr++ = Asdf.Kind.array;
+                *dataPtr++ = Fghj.Kind.array;
                 stack.push(((dataPtr - data.ptr) << 1) ^ 0);
                 dataPtr += 4;
                 if (!skipSpaces)
@@ -909,12 +909,12 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
                             }
                         }
                         static if (name == "null")
-                            *dataPtr++ = Asdf.Kind.null_;
+                            *dataPtr++ = Fghj.Kind.null_;
                         else
                         static if (name == "false")
-                            *dataPtr++ = Asdf.Kind.false_;
+                            *dataPtr++ = Fghj.Kind.false_;
                         else
-                            *dataPtr++ = Asdf.Kind.true_;
+                            *dataPtr++ = Fghj.Kind.true_;
                         strPtr += name.length;
                         goto next;
                     }
@@ -949,12 +949,12 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
                             strPtr++;
                         }
                         static if (name == "null")
-                            *dataPtr++ = Asdf.Kind.null_;
+                            *dataPtr++ = Fghj.Kind.null_;
                         else
                         static if (name == "false")
-                            *dataPtr++ = Asdf.Kind.false_;
+                            *dataPtr++ = Fghj.Kind.false_;
                         else
-                            *dataPtr++ = Asdf.Kind.true_;
+                            *dataPtr++ = Fghj.Kind.true_;
                         goto next;
                     }
             }
@@ -962,7 +962,7 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
         }
 
     string:
-        debug assert(*strPtr == '"', "Internal ASDF logic error. Please report an issue.");
+        debug assert(*strPtr == '"', "Internal FGHJ logic error. Please report an issue.");
         strPtr += 1;
 
     StringLoop: {
@@ -1109,10 +1109,10 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
         stack.free();
         goto ret_final;
     unexpectedEnd:
-        retCode = AsdfErrorCode.unexpectedEnd;
+        retCode = FghjErrorCode.unexpectedEnd;
         goto ret_error;
     unexpectedValue:
-        retCode = AsdfErrorCode.unexpectedValue;
+        retCode = FghjErrorCode.unexpectedValue;
         goto ret_error;
     object_key_unexpectedEnd:
         _lastError = "unexpected end of object key";
@@ -1194,8 +1194,8 @@ struct JsonParser(bool includingNewLine, bool hasSpaces, bool assumeValid, Alloc
 unittest
 {
     import mir.conv;
-    auto asdf_data = parseJson(` [ true, 123 , [ false, 123.0 , "123211" ], "3e23e" ] `);
-    auto str = asdf_data.to!string;
+    auto fghj_data = parseJson(` [ true, 123 , [ false, 123.0 , "123211" ], "3e23e" ] `);
+    auto str = fghj_data.to!string;
     auto str2 = `[true,123,[false,123.0,"123211"],"3e23e"]`;
     assert( str == str2);
 }
@@ -1236,7 +1236,7 @@ void encodeUTF8()(dchar c, ref ubyte* ptr)
 
 unittest
 {
-    auto asdf = "[\"\u007F\"]".parseJson;
+    auto fghj = "[\"\u007F\"]".parseJson;
 }
 
 unittest
@@ -1249,8 +1249,8 @@ unittest
 {
     import std.string;
     import std.range;
-    static immutable str = `"1234567890qwertyuiopasdfghjklzxcvbnm"`;
-    auto data = Asdf(str[1..$-1]);
+    static immutable str = `"1234567890qwertyuiopfghjghjklzxcvbnm"`;
+    auto data = Fghj(str[1..$-1]);
     assert(data == parseJson(str));
     foreach(i; 1 .. str.length)
     {
@@ -1264,7 +1264,7 @@ unittest
     import std.string;
     import std.range;
     static immutable str = `"\t\r\f\b\"\\\/\t\r\f\b\"\\\/\t\r\f\b\"\\\/\t\r\f\b\"\\\/"`;
-    auto data = Asdf("\t\r\f\b\"\\/\t\r\f\b\"\\/\t\r\f\b\"\\/\t\r\f\b\"\\/");
+    auto data = Fghj("\t\r\f\b\"\\/\t\r\f\b\"\\/\t\r\f\b\"\\/\t\r\f\b\"\\/");
     assert(data == parseJson(str));
     foreach(i; 1 .. str.length)
         assert(data == parseJson(str.representation.chunks(i)));
@@ -1275,7 +1275,7 @@ unittest
     import std.string;
     import std.range;
     static immutable str = `"\u0026"`;
-    auto data = Asdf("&");
+    auto data = Fghj("&");
     assert(data == parseJson(str));
 }
 

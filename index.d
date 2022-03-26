@@ -2,7 +2,7 @@ Ddoc
 
 $(P JSON Parsing and Serialization library.)
 
-$(P The following table is a quick reference guide for which ASDF modules to
+$(P The following table is a quick reference guide for which FGHJ modules to
 use for a given category of functionality.)
 
 $(BOOKTABLE ,
@@ -11,36 +11,36 @@ $(BOOKTABLE ,
         $(TH Description)
     )
     $(TR
-        $(TDNW $(MREF0 asdf))
+        $(TDNW $(MREF0 fghj))
         $(TD Publicly inludes
-            $(MREF asdf,asdf),
-            $(MREF asdf,jsonparser),
-            $(MREF asdf,serialization),
-            $(MREF asdf,transform).
+            $(MREF fghj,fghj),
+            $(MREF fghj,jsonparser),
+            $(MREF fghj,serialization),
+            $(MREF fghj,transform).
         )
     )
     $(TR
-        $(TDNW $(MREF asdf,asdf))
-        $(TD ASDF Representation)
+        $(TDNW $(MREF fghj,fghj))
+        $(TD FGHJ Representation)
     )
     $(TR
-        $(TDNW $(MREF asdf,jsonparser))
+        $(TDNW $(MREF fghj,jsonparser))
         $(TD JSON Parsing API)
     )
     $(TR
-        $(TDNW $(MREF asdf,serialization))
-        $(TD ASDF and JSON Serialization)
+        $(TDNW $(MREF fghj,serialization))
+        $(TD FGHJ and JSON Serialization)
     )
     $(TR
-        $(TDNW $(MREF asdf,transform))
-        $(TD Mutable ASDF data structure)
+        $(TDNW $(MREF fghj,transform))
+        $(TD Mutable FGHJ data structure)
     )
 )
 
 Copyright: Copyright © 2020-, Ilya Yaroshenko.
 
 Macros:
-        TITLE=ASDF
-        WIKI=ASDF
+        TITLE=FGHJ
+        WIKI=FGHJ
         DDOC_BLANKLINE=
         _=
