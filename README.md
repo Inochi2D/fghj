@@ -4,7 +4,8 @@
 
 # Fox Girl Handles JSON
 
-This is a fork of the defunct Asdf library, meant for use with Inochi2D.
+_**!! This is a fork of the defunct Asdf library, meant for use with Inochi2D. !!**_
+
 FGHJ is a cache oriented string based JSON representation.
 Besides, it is a convenient Json Library for D that gets out of your way.
 FGHJ is specially geared towards transforming high volumes of JSON dataframes, either to new 
