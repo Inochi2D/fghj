@@ -1,10 +1,6 @@
 [![Dub version](https://img.shields.io/dub/v/fghj.svg)](http://code.dlang.org/packages/fghj)
 [![Dub downloads](https://img.shields.io/dub/dt/fghj.svg)](http://code.dlang.org/packages/fghj)
 [![License](https://img.shields.io/dub/l/fghj.svg)](http://code.dlang.org/packages/fghj)
-[![codecov.io](https://codecov.io/github/libmir/fghj/coverage.svg?branch=master)](https://codecov.io/github/tamediadigital/fghj?branch=master)
-[![Build Status](https://travis-ci.org/libmir/fghj.svg?branch=master)](https://travis-ci.org/libmir/fghj)
-[![Circle CI Docs](https://circleci.com/gh/libmir/fghj.svg?style=shield&circle-token=:circle-ci-badge-token)](https://circleci.com/gh/libmir/fghj)
-[![Build status](https://ci.appveyor.com/api/projects/status/libmir/fghj?svg=true)](https://ci.appveyor.com/project/9il/fghj-sesrc)
 
 # Fox Girl Handles JSON
 
