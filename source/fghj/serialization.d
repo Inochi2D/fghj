@@ -1029,6 +1029,9 @@ struct JsonSerializer(string sep, Dg)
     ///ditto
     void putNumberValue(Num)(Num num, FormatSpec!char fmt = FormatSpec!char.init)
     {
+        import mir.format: print;
+        import mir.internal.utility: isFloatingPoint;
+
         auto f = &sink.putSmallEscaped;
         static if (isNumeric!Num)
         {
@@ -1041,14 +1044,29 @@ struct JsonSerializer(string sep, Dg)
                 }
             }
             auto app = S(f);
-            if (fmt == FormatSpec!char.init)
+            
+            static if (isFloatingPoint!Num)
             {
-                import mir.format: print;
-                print(app, num);
-                return;
+                import mir.math.common: fabs;
+
+                if (num.fabs < num.infinity)
+                    print(app, num);
+                else if (num == Num.infinity)
+                    app.put(`"+inf"`);
+                else if (num == -Num.infinity)
+                    app.put(`"-inf"`);
+                else
+                    app.put(`"nan"`);
+            } else {
+                if (fmt == FormatSpec!char.init)
+                {
+                    import mir.format: print;
+                    print(app, num);
+                    return;
+                }
+                assumePure((typeof(f) fun) => formatValue(fun, num, fmt))(f);
             }
         }
-        assumePure((typeof(f) fun) => formatValue(fun, num, fmt))(f);
     }
 
     ///ditto
@@ -1401,11 +1419,11 @@ void serializeValue(S, V)(ref S serializer, in V value, FormatSpec!char fmt = Fo
         if (isFinite(value))
             serializer.putNumberValue(value, fmt);
         else if (value.isNaN)
-            serializer.putValue(signbit(value) ? "-nan" : "nan");
+            serializer.putValue(signbit(value) ? `"-nan"` : `"nan"`);
         else if (value == V.infinity)
-            serializer.putValue("inf");
+            serializer.putValue(`"inf"`);
         else if (value == -V.infinity)
-            serializer.putValue("-inf");
+            serializer.putValue(`"-inf"`);
     }
     else
         serializer.putNumberValue(value, fmt);
